@@ -16,7 +16,7 @@ ELCTESTS = $(TESTSSRC:.el=.elc)
 
 .PHONY: autoloads
 autoloads: cask
-	$(EMACS) -Q --batch -f package-initialize --eval "(package-generate-autoloads \"private-comments-mode\")"
+	$(EMACS) -Q --batch -f package-initialize --eval "(package-generate-autoloads \"private-comments-mode\" default-directory)"
 
 README.rst: README.in.rst private-comments-mode.el
 	grep ';;' private-comments-mode.el \
@@ -37,7 +37,7 @@ clean:
 	rm -f tests/log/*
 
 .PHONY: test-compile
-test-compile:
+test-compile: autoloads
 	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
 	! ($(CASK) eval \
 	      "(cl-letf (((symbol-function (quote cask-files)) (lambda (&rest _args) (mapcar (function symbol-name) (quote ($(TESTSSRC))))))) \

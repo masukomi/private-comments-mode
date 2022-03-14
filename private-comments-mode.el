@@ -29,36 +29,17 @@
 (defvar private-comments-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map prog-mode-map)
-    (define-key map (kbd "C-c C-v") #'private-comments-view)
     (define-key map (kbd "C-c C-r") #'private-comments-record)
     (define-key map (kbd "C-c C-d") #'private-comments-delete)
-    (define-key map (kbd "C-c C-j") #'private-comments-jump)
     (easy-menu-define private-comments-menu map "Private Comments Mode Menu"
       `("Private-Comments"
         :help "Private Comments"
-        ["View" private-comments-record
-         :help "View Comment"]
         ["Record" private-comments-record
          :help "Record Comment"]
-        ["Jump" private-comments-jump
-         :help "Jump To Comment"]
         ["Delete" private-comments-delete
          :help "Delete Comment"]))
     map)
   "Private comments mode key map.")
-
-(defun private-comments-nchars-to-fringe (pos)
-  (interactive "d")
-  (save-excursion
-    (goto-char pos)
-    (end-of-line)
-    (- (window-width)
-       (if visual-line-mode
-           (- (point) (beginning-of-visual-line))
-         (% (current-column) (window-width))))))
-
-(defconst private-comments--enough-chars 40
-  "If this number of characters fits on the same line, ellipsify.")
 
 (defcustom private-comments-face 'highlight
   "Face for annotations."
@@ -163,12 +144,6 @@ numerical port, e.g., 5749, which assumes
                (process-buffer proc)))
     proc))
 
-(defun private-comments-annotate (pos comment)
-  "Put the overlay."
-  (let* ((leeway (private-comments-nchars-to-fringe pos))
-         (enough-chars (min private-comments--enough-chars (length comment))))
-    (overlay-put (make-overlay pos pos) 'after-string comment)))
-
 (defmacro private-comments--request (url callback)
   (declare (indent defun))
   `(url-retrieve ,url ,callback nil t))
@@ -192,6 +167,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                                             :null-object json-null
                                             :false-object json-false)
                          :comments)))
+          (ignore comments)
           ;; rebuild the world for now
           (with-current-buffer buffer
             (private-comments-apply))))
@@ -264,7 +240,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
 
 \\{private-comments-edit-mode-map}
 "
-  nil " PCM Edit" nil
+  :lighter " PCM Edit"
   (setq-local header-line-format
               (substitute-command-keys
                "Edit, then exit with \\[private-comments-edit-done] \
@@ -276,7 +252,8 @@ or abort with \\[private-comments-edit-abort]")))
 
 (defun private-comments-edit-done ()
   (interactive)
-  (funcall private-comments--edit-callback-1 (buffer-string))
+  (when (bound-and-true-p private-comments--edit-callback-1)
+    (funcall private-comments--edit-callback-1 (buffer-string)))
   (kill-buffer))
 
 (defun private-comments--edit-callback-4 (buffer* line-number* commit* comment)
@@ -289,7 +266,6 @@ or abort with \\[private-comments-edit-abort]")))
                                  (file-name-directory (buffer-file-name))))
              (base-name (file-name-nondirectory (buffer-file-name)))
              (relative-name (private-comments-relative-name base-name))
-             (blame-data (private-comments-blame-data base-name))
              (url-request-method 'POST)
              (url-request-data
               (json-encode-alist
@@ -315,7 +291,7 @@ or abort with \\[private-comments-edit-abort]")))
   "Like `org-edit-special'."
   (interactive)
   (let ((restore-window-config (current-window-configuration))
-        (buffer (switch-to-buffer-other-window (generate-new-buffer name))))
+        (buffer (switch-to-buffer-other-window (generate-new-buffer "PCM Edit"))))
     (with-current-buffer buffer
       (add-hook 'kill-buffer-hook
                 (apply-partially #'set-window-configuration restore-window-config)
@@ -360,12 +336,13 @@ or abort with \\[private-comments-edit-abort]")))
              do (forward-line -1)
              finally return data)))
 
+(defun private-comments-delete ())
+
 (defun private-comments-record ()
   (interactive)
   (let* ((default-directory (directory-file-name
                              (file-name-directory (buffer-file-name))))
          (base-name (file-name-nondirectory (buffer-file-name)))
-         (relative-name (private-comments-relative-name base-name))
          (blame-data (private-comments-blame-data base-name))
          ;; line-number and blame-data are one-indexed
          (line-number (line-number-at-pos))
@@ -374,7 +351,7 @@ or abort with \\[private-comments-edit-abort]")))
          (commit (plist-get blame :commit)))
     (if commit
         (private-comments-edit
-         (apply-partially #'private-comments-edit-callback-4
+         (apply-partially #'private-comments--edit-callback-4
                           (current-buffer)
                           line-number
                           commit))
