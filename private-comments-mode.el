@@ -189,17 +189,21 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                                           :array-type 'list
                                           :null-object json-null
                                           :false-object json-false))
-               (status (plist-get result :status)))
+               (status (plist-get result :status))
+               (description (plist-get result :description)))
           (if (equal status "SUCCESS")
               ;; rebuild the world for now
               (with-current-buffer buffer
                 (private-comments-apply))
             (display-warning 'private-comments
-                             (format "private-comments--generic-callback: %s"
-                                     status)))))
+                             (format "private-comments--generic-callback[%s]: %s"
+                                     status
+                                     (if (stringp description)
+                                         description
+                                       "No description"))))))
     (kill-buffer)))
 
-(defun private-comments--apply-callback (buffer blame-data &rest _args)
+(defun private-comments--apply-callback (buffer &rest _args)
   "Current buffer is url-http's retrieval (starts with ' *http').
 BUFFER is the edit buffer from which url-retrieve was issued."
   (unwind-protect
@@ -220,34 +224,32 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                   (dolist (comment comments)
                     (goto-char (point-min))
                     (forward-line (1- (plist-get comment :line_number)))
-                    ;; BLAME should be nil if Not Committed Yet
-                    (when-let ((blame (aref blame-data
-                                            (plist-get comment :line_number)))
-                               (indent (current-indentation))
-                               (aligned (concat
-                                         (make-string indent ? )
-                                         (string-trim
-                                          (mapconcat
-                                           #'identity
-                                           (split-string
-                                            (plist-get comment :comment)
-                                            "[\n\r\v]")
-                                           (concat "\n"
-                                                   (make-string indent ? ))))
-                                         "\n"))
-                               (propertized (propertize
-                                             aligned
-                                             'face 'private-comments-face))
-                               (ov (make-overlay (point) (point-at-eol) nil t nil)))
-                      ;; overlay marker-following avoids having to
-                      ;; blame again
-                      (overlay-put ov 'pcm-line-string
-                                   (plist-get blame :line-string))
-                      (overlay-put ov 'pcm-commit
-                                   (plist-get blame :commit))
-                      (overlay-put ov 'before-string propertized)
-                      (overlay-put ov 'modification-hooks
-                                   (list 'private-comments--mod-callback))))))))))
+                    (if-let ((treeish (plist-get comment :treeish))
+                             (indent (current-indentation))
+                             (aligned (concat
+                                       (make-string indent ? )
+                                       (string-trim
+                                        (mapconcat
+                                         #'identity
+                                         (split-string
+                                          (plist-get comment :comment)
+                                          "[\n\r\v]")
+                                         (concat "\n"
+                                                 (make-string indent ? ))))
+                                       "\n"))
+                             (propertized (propertize
+                                           aligned
+                                           'face 'private-comments-face))
+                             (ov (make-overlay (point) (point-at-eol))))
+                        (progn
+                          (overlay-put ov 'pcm-commit treeish)
+                          (overlay-put ov 'before-string propertized)
+                          (overlay-put ov 'modification-hooks
+                                       (list 'private-comments--mod-callback)))
+                      (display-warning 'private-comments
+                                       (concat "private-comments--apply-callback: "
+                                               "unexpected "
+                                               (format "%S" comment)))))))))))
     (kill-buffer)))
 
 (defun private-comments-relative-name (base-name)
@@ -370,10 +372,13 @@ or abort with \\[private-comments-edit-abort]")))
                                (file-name-directory (buffer-file-name))))
            (base-name (file-name-nondirectory (buffer-file-name)))
            (relative-name (private-comments-relative-name base-name))
-           (ov (car (last (cl-remove-if-not
+           (ov (car (sort (cl-remove-if-not
                            (lambda (ov)
                              (overlay-get ov 'pcm-commit))
-                           (overlays-in (point-min) (point))))))
+                           (overlays-in (point-min) (min (point-max)
+                                                         (1+ (point)))))
+                          (lambda (a b)
+                            (> (overlay-end a) (overlay-end b))))))
            (line-number (save-excursion (goto-char (overlay-start ov))
                                         (line-number-at-pos)))
            (url-request-method "DELETE")
@@ -396,6 +401,10 @@ or abort with \\[private-comments-edit-abort]")))
        nil t)
     (error "No private comment found.")))
 
+(defsubst private-comments--uncommitted (commit)
+  (or (not (stringp commit))
+      (string-match-p "^0+$" commit)))
+
 (defun private-comments-record ()
   (interactive)
   (let* ((default-directory (directory-file-name
@@ -407,13 +416,13 @@ or abort with \\[private-comments-edit-abort]")))
          (blame (when (<= line-number (length blame-data))
                   (aref blame-data line-number)))
          (commit (plist-get blame :commit)))
-    (if commit
-        (private-comments-edit
-         (apply-partially #'private-comments--edit-callback-4
-                          (current-buffer)
-                          line-number
-                          commit))
-      (error "Line %s is uncommitted." line-number))))
+    (if (private-comments--uncommitted commit)
+        (error "Line %s is uncommitted." line-number)
+      (private-comments-edit
+       (apply-partially #'private-comments--edit-callback-4
+                        (current-buffer)
+                        line-number
+                        commit)))))
 
 (defun private-comments-apply ()
   (interactive)
@@ -426,7 +435,7 @@ or abort with \\[private-comments-edit-abort]")))
          (blame-commits
           (cl-delete-duplicates
            (cl-remove-if
-            (lambda (x) (or (null x) (string-match-p "^0+$" x)))
+            #'private-comments--uncommitted
             (seq-map (lambda (x) (plist-get x :commit)) blame-data))
            :test #'equal))
          (query (format "%s/v1/comments?%s"
@@ -443,7 +452,7 @@ or abort with \\[private-comments-edit-abort]")))
      query
      (apply-partially
       #'private-comments--apply-callback
-      (current-buffer) blame-data)
+      (current-buffer))
      nil t)))
 
 (provide 'private-comments-mode)
