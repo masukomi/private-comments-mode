@@ -26,7 +26,7 @@
   :group 'tools
   :prefix "private-comments-")
 
-(defvar private-comments-map
+(defvar private-comments-mode-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map prog-mode-map)
     (define-key map (kbd "C-c C-r") #'private-comments-record)
@@ -41,9 +41,33 @@
     map)
   "Private comments mode key map.")
 
-(defcustom private-comments-face 'highlight
+(defun private-comments-clear ()
+  (interactive)
+  (save-excursion
+    (save-restriction
+      (widen)
+      (dolist (ov (cl-remove-if-not
+                   (lambda (ov)
+                     (overlay-get ov 'pcm-commit))
+                   (overlays-in (point-min) (point-max))))
+        (delete-overlay ov)))))
+
+(define-minor-mode private-comments-mode
+  "Private Comments minor mode.
+
+\\{private-comments-mode-map}
+"
+  :lighter " PCM"
+  (if private-comments-mode
+      (private-comments-apply)
+    (private-comments-clear)))
+
+(defface private-comments-face
+  `((((class color) (background light))
+     :background "honeydew1" ,@(when (>= emacs-major-version 27) '(:extend t)))
+    (((class color) (background dark))
+     :background "#383838" ,@(when (>= emacs-major-version 27) '(:extend t))))
   "Face for annotations."
-  :type 'face
   :group 'private-comments)
 
 (defcustom private-comments-executable-args ""
@@ -148,32 +172,34 @@ numerical port, e.g., 5749, which assumes
   (declare (indent defun))
   `(url-retrieve ,url ,callback nil t))
 
-(defun private-comments-mod-callback (ov is-after-change &rest _)
+(defun private-comments--mod-callback (ov is-after-change &rest _)
   (when is-after-change
     (unless (equal (overlay-get ov 'pcm-line-string)
                    (save-excursion
                      (goto-char (overlay-start ov))
                      (thing-at-point 'line t))))))
 
-(defun private-comments-record-callback (buffer &rest _args)
+(defun private-comments--generic-callback (buffer &rest _args)
   "Current buffer is url-http's retrieval (starts with ' *http').
 BUFFER is the edit buffer from which url-retrieve was issued."
   (unwind-protect
       (progn
         (goto-char (1+ url-http-end-of-headers))
-        (let ((comments (plist-get
-                         (json-parse-buffer :object-type 'plist
-                                            :array-type 'list
-                                            :null-object json-null
-                                            :false-object json-false)
-                         :comments)))
-          (ignore comments)
-          ;; rebuild the world for now
-          (with-current-buffer buffer
-            (private-comments-apply))))
+        (let* ((result (json-parse-buffer :object-type 'plist
+                                          :array-type 'list
+                                          :null-object json-null
+                                          :false-object json-false))
+               (status (plist-get result :status)))
+          (if (equal status "SUCCESS")
+              ;; rebuild the world for now
+              (with-current-buffer buffer
+                (private-comments-apply))
+            (display-warning 'private-comments
+                             (format "private-comments--generic-callback: %s"
+                                     status)))))
     (kill-buffer)))
 
-(defun private-comments-apply-callback (buffer blame-data &rest _args)
+(defun private-comments--apply-callback (buffer blame-data &rest _args)
   "Current buffer is url-http's retrieval (starts with ' *http').
 BUFFER is the edit buffer from which url-retrieve was issued."
   (unwind-protect
@@ -187,14 +213,10 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                          :comments)))
           (when (buffer-live-p buffer)
             (with-current-buffer buffer
+              (private-comments-clear)
               (save-excursion
                 (save-restriction
                   (widen)
-                  (dolist (ov (cl-remove-if-not
-                               (lambda (ov)
-                                 (overlay-get ov 'pcm-commit))
-                               (overlays-in (point-min) (point-max))))
-                    (delete-overlay ov))
                   (dolist (comment comments)
                     (goto-char (point-min))
                     (forward-line (1- (plist-get comment :line_number)))
@@ -202,15 +224,20 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                     (when-let ((blame (aref blame-data
                                             (plist-get comment :line_number)))
                                (indent (current-indentation))
-                               (rendered (with-temp-buffer
-                                           (insert (make-string indent ? ))
-                                           (save-excursion
-                                             (insert (string-trim
-                                                      (plist-get comment :comment))
-                                                     "\n"))
-                                           (fill-paragraph)
-                                           (propertize (buffer-string)
-                                                       'face private-comments-face)))
+                               (aligned (concat
+                                         (make-string indent ? )
+                                         (string-trim
+                                          (mapconcat
+                                           #'identity
+                                           (split-string
+                                            (plist-get comment :comment)
+                                            "[\n\r\v]")
+                                           (concat "\n"
+                                                   (make-string indent ? ))))
+                                         "\n"))
+                               (propertized (propertize
+                                             aligned
+                                             'face 'private-comments-face))
                                (ov (make-overlay (point) (point-at-eol) nil t nil)))
                       ;; overlay marker-following avoids having to
                       ;; blame again
@@ -218,9 +245,9 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                                    (plist-get blame :line-string))
                       (overlay-put ov 'pcm-commit
                                    (plist-get blame :commit))
-                      (overlay-put ov 'before-string rendered)
+                      (overlay-put ov 'before-string propertized)
                       (overlay-put ov 'modification-hooks
-                                   (list 'private-comments-mod-callback))))))))))
+                                   (list 'private-comments--mod-callback))))))))))
     (kill-buffer)))
 
 (defun private-comments-relative-name (base-name)
@@ -259,14 +286,14 @@ or abort with \\[private-comments-edit-abort]")))
 (defun private-comments--edit-callback-4 (buffer* line-number* commit* comment)
   (private-comments-ensure-server)
   (if (not (buffer-live-p buffer*))
-      (error "private-comments--edit-callback-4: Buffer '%s' dead."
+      (error "private-comments--edit-callback-4: Buffer '%s' killed."
              (buffer-name buffer*))
     (with-current-buffer buffer*
       (let* ((default-directory (directory-file-name
                                  (file-name-directory (buffer-file-name))))
              (base-name (file-name-nondirectory (buffer-file-name)))
              (relative-name (private-comments-relative-name base-name))
-             (url-request-method 'POST)
+             (url-request-method "POST")
              (url-request-data
               (json-encode-alist
                `((project_name_hash . ,(secure-hash
@@ -283,7 +310,7 @@ or abort with \\[private-comments-edit-abort]")))
         (url-retrieve
          query
          (apply-partially
-          #'private-comments-record-callback
+          #'private-comments--generic-callback
           buffer*)
          nil t)))))
 
@@ -336,7 +363,38 @@ or abort with \\[private-comments-edit-abort]")))
              do (forward-line -1)
              finally return data)))
 
-(defun private-comments-delete ())
+(defun private-comments-delete ()
+  "Delete the first preceding private comment, if any."
+  (interactive)
+  (if-let ((default-directory (directory-file-name
+                               (file-name-directory (buffer-file-name))))
+           (base-name (file-name-nondirectory (buffer-file-name)))
+           (relative-name (private-comments-relative-name base-name))
+           (ov (car (last (cl-remove-if-not
+                           (lambda (ov)
+                             (overlay-get ov 'pcm-commit))
+                           (overlays-in (point-min) (point))))))
+           (line-number (save-excursion (goto-char (overlay-start ov))
+                                        (line-number-at-pos)))
+           (url-request-method "DELETE")
+           (query (format "%s/v1/comments?%s"
+                          (directory-file-name private-comments-url)
+                          (url-build-query-string
+                           `((project_name_hash ,(secure-hash
+                                                  'sha256
+                                                  (file-name-nondirectory
+                                                   (directory-file-name
+                                                    (vc-git-root default-directory)))))
+                             (file_path_hash ,(secure-hash 'sha256 relative-name))
+                             (line_number ,line-number)
+                             (treeish ,(overlay-get ov 'pcm-commit)))))))
+      (url-retrieve
+       query
+       (apply-partially
+        #'private-comments--generic-callback
+        (current-buffer))
+       nil t)
+    (error "No private comment found.")))
 
 (defun private-comments-record ()
   (interactive)
@@ -384,7 +442,7 @@ or abort with \\[private-comments-edit-abort]")))
     (url-retrieve
      query
      (apply-partially
-      #'private-comments-apply-callback
+      #'private-comments--apply-callback
       (current-buffer) blame-data)
      nil t)))
 
