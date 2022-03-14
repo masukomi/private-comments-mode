@@ -137,9 +137,12 @@ numerical port, e.g., 5749, which assumes
                return t ;; skip finally
                do (accept-process-output nil 0.3))))
     (unless (ping 1)
-      (private-comments--run-server))
+      (if (y-or-n-p "PC Server not running. Run now? ")
+          (private-comments--run-server)
+        (let (debug-on-error)
+          (error "private-comments-ensure-server: quit"))))
     (unless (ping 5)
-      (error "private-comments-apply: could not start server"))))
+      (error "private-comments-ensure-server: could not start server"))))
 
 (defconst private-comments-server-process-name "PCM Server")
 (defconst private-comments-server-buffer-name
@@ -239,7 +242,8 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                                        "\n"))
                              (propertized (propertize
                                            aligned
-                                           'face 'private-comments-face))
+                                           'face '(private-comments-face
+                                                   default)))
                              (ov (make-overlay (point) (point-at-eol))))
                         (progn
                           (overlay-put ov 'pcm-commit treeish)
