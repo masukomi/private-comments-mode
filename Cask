@@ -5,6 +5,4 @@
 (files "private-comments*.el")
 
 (development
- (depends-on "ert-runner")
- (depends-on "package-lint")
- (depends-on "pkg-info"))
+ (depends-on "ert-runner"))
