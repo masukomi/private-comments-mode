@@ -23,4 +23,16 @@ Usage
 =====
 Then ``M-x private-comments-mode``.
 
+Keymap (C-h b)
+==============
+
+::
+
+   Key             Binding
+   -------------------------------------------------------------------------------
+   C-c C-d		private-comments-delete
+   C-c C-r		private-comments-record
+   
+   C-M-q		prog-indent-sexp
+
 .. _Cask: https://github.com/cask/cask.git

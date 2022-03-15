@@ -23,4 +23,11 @@ Usage
 =====
 Then ``M-x private-comments-mode``.
 
+Keymap (C-h b)
+==============
+
+::
+
+.. KEYS NOTEBOOK (see Makefile)
+
 .. _Cask: https://github.com/cask/cask.git

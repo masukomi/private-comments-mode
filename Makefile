@@ -19,10 +19,15 @@ autoloads: cask
 	$(EMACS) -Q --batch -f package-initialize --eval "(package-generate-autoloads \"private-comments-mode\" default-directory)"
 
 README.rst: README.in.rst private-comments-mode.el
+	$(CASK) eval "(progn \
+	             (load \"private-comments-mode\") \
+	             (describe-minor-mode \"private-comments-mode\") \
+	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
+	| scripts/readme-sed.sh "KEYS NOTEBOOK" README.in.rst "key.*binding" > README.rst0
 	grep ';;' private-comments-mode.el \
 	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
 	    | sed -e 's/^\s*;;*\s*//g' \
-	    | scripts/readme-sed.sh "COMMENTARY" README.in.rst > README.rst
+	    | scripts/readme-sed.sh "COMMENTARY" README.rst0 > README.rst
 
 .PHONY: cask
 cask: $(CASK_DIR)
