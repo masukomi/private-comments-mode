@@ -20,7 +20,9 @@ Install
 
 Usage
 =====
-Then ``M-x private-comments-mode``.
+::
+
+   M-x private-comments-mode
 
 Keymap (C-h b)
 ==============
