@@ -42,6 +42,18 @@ jobs:
         key: cache-cask-packages-000
 
     - uses: actions/cache@v2
+      id: cache-eggs
+      with:
+        path: /root/.cache/chicken-install
+        key: cache-eggs-000
+
+    - uses: actions/cache@v2
+      id: cache-local-bin
+      with:
+        path: $HOME/.local/bin
+        key: cache-local-bin-000
+
+    - uses: actions/cache@v2
       id: cache-cask-executable
       with:
         path: ~/.cask
@@ -84,13 +96,20 @@ jobs:
       run: |
         make lint
 
-    - name: make
+    - name: install-chicken-eggs
+      if: steps.cache-local-bin.outputs.cache-hit != 'true'
       run: |
-        mkdir -p $HOME/.local
         cd private_comments/src
         sudo sh install_chicken_eggs.sh
-        sudo sh build.sh
-        cp -f pc private_comments $HOME/.local
+        sudo chicken-install pathname-expand
+
+    - name: build-private-comments
+      if: steps.cache-local-bin.outputs.cache-hit != 'true'
+      run: |
+        cd private_comments/src
+        sh build.sh
+        mkdir -p $HOME/.local/bin
+        cp pc private_comments $HOME/.local/bin
 
     - name: test
       run: |
