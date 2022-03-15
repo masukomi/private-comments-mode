@@ -88,8 +88,8 @@ jobs:
       run: |
         mkdir -p $HOME/.local
         cd private_comments/src
-        sh install_chicken_eggs.sh
-        sh build.sh
+        sudo sh install_chicken_eggs.sh
+        sudo sh build.sh
         cp -f pc private_comments $HOME/.local
 
     - name: test
