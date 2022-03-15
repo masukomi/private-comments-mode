@@ -51,14 +51,18 @@
                    (overlays-in (point-min) (point-max))))
         (delete-overlay ov)))))
 
+;;;###autoload (autoload 'private-comments-mode "private-comments-mode" nil t)
 (define-minor-mode private-comments-mode
   "Private Comments minor mode.
 
 \\{private-comments-mode-map}
 "
   :lighter " PCM"
+  (unless (buffer-file-name)
+    (display-warning 'private-comments "private-comments-mode: no buffer")
+    (setq private-comments-mode nil))
   (if private-comments-mode
-      (condition-case err
+      (condition-case-unless-debug err
           (private-comments-apply)
         (error (display-warning
                 'private-comments
@@ -194,7 +198,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
   (unwind-protect
       (progn
         (goto-char (1+ url-http-end-of-headers))
-        (let* ((result (condition-case err
+        (let* ((result (condition-case-unless-debug err
                            (json-parse-buffer :object-type 'plist
                                               :array-type 'list
                                               :null-object json-null
