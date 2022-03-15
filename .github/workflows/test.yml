@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  pull_request:
+    paths-ignore:
+    - '**.rst'
+    - '**.txt'
+    - '**.texi'
+  push:
+    paths-ignore:
+    - '**.txt'
+    - '**.rst'
+    - '**.texi'
+    branches-ignore:
+    - 'master'
+    - 'main'
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        emacs_version: [27.2]
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: purcell/setup-emacs@master
+      with:
+        version: ${{ matrix.emacs_version }}
+
+    - uses: actions/cache@v2
+      with:
+        path: melpazoid-master
+        key: melpazoid-000
+
+    - uses: actions/cache@v2
+      id: cache-cask-packages
+      with:
+        path: .cask
+        key: cache-cask-packages-000
+
+    - uses: actions/cache@v2
+      id: cache-cask-executable
+      with:
+        path: ~/.cask
+        key: cache-cask-executable-000
+
+    - uses: cask/setup-cask@master
+      if: steps.cache-cask-executable.outputs.cache-hit != 'true'
+      with:
+          version: snapshot
+
+    - uses: actions/cache@v2
+      id: cache-private-comments
+      with:
+        path: private_comments
+        key: cache-private-comments-000
+
+    - uses: actions/checkout@v2
+      if: steps.cache-private-comments.outputs.cache-hit != 'true'
+      with:
+        repository: masukomi/private_comments
+        path: private_comments
+
+    - name: paths
+      run: |
+        echo "$HOME/bin" >> $GITHUB_PATH
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        echo "$HOME/.cask/bin" >> $GITHUB_PATH
+        echo "LD_LIBRARY_PATH=$HOME/.local/lib" >> $GITHUB_ENV
+
+    - name: apt-get
+      run: |
+        sudo apt-get -yq update
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev
+
+    - name: chicken-bin
+      run: |
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install chicken-bin
+
+    - name: lint
+      run: |
+        make lint
+
+    - name: make
+      run: |
+        mkdir -p $HOME/.local
+        cd private_comments/src
+        sh install_chicken_eggs.sh
+        sh build.sdh
+        cp -f pc private_comments $HOME/.local
+
+    - name: test
+      run: |
+        make test

@@ -44,19 +44,15 @@ test-compile: autoloads
 	          (let ((byte-compile-error-on-warn t)) (cask-cli/build)))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; rm -f $(ELCTESTS) && exit $$ret)
 
 .PHONY: lint
-lint: test-compile
+lint:
 	bash -ex scripts/melpazoid.sh
 
 .PHONY: test-unit
 test-unit:
 	$(CASK) exec ert-runner -L . -L tests tests/test*.el
 
-.PHONY: test-int
-test-int:
-	$(CASK) exec ecukes --reporter magnars
-
 .PHONY: test
-test: test-compile test-unit test-int
+test: test-compile test-unit
 
 .PHONY: dist-clean
 dist-clean:
