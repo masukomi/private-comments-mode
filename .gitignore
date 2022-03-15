@@ -13,5 +13,4 @@ super-secret-refresh-token
 scratch.el
 ert-profile*
 melpazoid-master
-tests/config
-tests/test-repo
+tests/*
