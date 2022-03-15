@@ -11,10 +11,12 @@
                               (mkdir repo)
                               (file-name-as-directory repo)))
          (file-name (expand-file-name "test-repo.c"))
-         (buffer (find-file-noselect file-name)))
+         (buffer (find-file-noselect file-name))
+         (source (list "#include <stdio.h>" "\n"
+                       "    /* indented four spaces */" "\n")))
     (vc-git-create-repo)
     (with-current-buffer buffer
-      (save-excursion (insert "#include <stdio.h>" "\n"))
+      (save-excursion (apply #'insert source))
       (save-buffer))
     (vc-git-register (list file-name))
     (vc-git-checkin (list file-name) "Initial commit")
@@ -43,7 +45,8 @@
       (save-buffer)
       (should-error (call-interactively #'private-comments-record))
       (erase-buffer)
-      (save-excursion (insert "#include <stdio.h>" "\n"))
+      ;; Restore committed version
+      (save-excursion (apply #'insert source))
       (save-buffer)
       (call-interactively #'private-comments-record))
     ;; Update record
@@ -66,7 +69,33 @@
       (pcm-test-wait-for
        (lambda ()
          (not (overlays-at (point))))))
+    ;; Basic record with indent
+    (with-current-buffer buffer
+      (goto-char (point-min))
+      (forward-line 1)
+      (call-interactively #'private-comments-record))
+    (with-current-buffer "PCM Edit"
+      (insert "line 1" "\n" "line2")
+      (call-interactively #'private-comments-edit-done))
+    (with-current-buffer buffer
+      (goto-char (point-min))
+      (forward-line 1)
+      (pcm-test-wait-for
+       (lambda ()
+         (when-let ((ov (car (overlays-at (point)))))
+           (equal "    line 1\n    line2\n"
+                  (substring-no-properties
+                   (overlay-get ov 'before-string)))))
+       nil 1500)
+      (call-interactively #'private-comments-record))
+    (with-current-buffer "PCM Edit"
+      (pcm-test-wait-for
+       (lambda ()
+         (equal "line 1\nline2" (buffer-string)))
+       nil 1500)
+      (call-interactively #'private-comments-edit-abort))
     (let (kill-buffer-query-functions)
+      (kill-buffer buffer)
       (kill-buffer private-comments-server-buffer-name))))
 
 (ert-deftest pcm-equal-signs ()
@@ -104,4 +133,5 @@
                    (overlay-get ov 'before-string)))))
        nil 1500))
     (let (kill-buffer-query-functions)
+      (kill-buffer buffer)
       (kill-buffer private-comments-server-buffer-name))))
