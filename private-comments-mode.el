@@ -11,7 +11,8 @@
 
 ;;; Commentary:
 
-;; Display Private Comments as overlays.
+;; A minor mode for ``masukomi/private_comments``.  Private comments
+;; appear as overlays and are not part of the source.
 
 ;;; Code:
 

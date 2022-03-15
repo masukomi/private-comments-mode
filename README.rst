@@ -1,6 +1,7 @@
 |build-status|
 
-Display Private Comments as overlays.
+A minor mode for ``masukomi/private_comments``.  Private comments
+appear as overlays and are not part of the source.
 
 .. |build-status|
    image:: https://github.com/dickmao/private-comments-mode/workflows/CI/badge.svg?branch=dev
