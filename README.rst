@@ -4,8 +4,8 @@ A minor mode for ``masukomi/private_comments``.  Private comments
 appear as overlays and are not part of the source.
 
 .. |build-status|
-   image:: https://github.com/dickmao/private-comments-mode/workflows/CI/badge.svg?branch=dev
-   :target: https://github.com/dickmao/private-comments-mode/actions
+   image:: https://github.com/masukomi/private-comments-mode/workflows/CI/badge.svg?branch=dev
+   :target: https://github.com/masukomi/private-comments-mode/actions
    :alt: Build Status
 
 .. |--| unicode:: U+2013   .. en dash
@@ -16,7 +16,7 @@ Install
 =======
 ::
 
-   git clone https://github.com/commercial-emacs/private-comments-mode.git
+   git clone https://github.com/masukomi/private-comments-mode.git
    make -C private-comments-mode install
 
 Usage

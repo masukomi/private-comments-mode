@@ -6,7 +6,7 @@
 ;;              Kay Rhodes <masukomi@masukomi.org>
 ;; Version: 0.1
 ;; Keywords: tools
-;; URL: https://github.com/commercial-emacs/private-comments-mode
+;; URL: https://github.com/masukomi/private-comments-mode
 ;; Package-Requires: ((emacs "27.1"))
 
 ;;; Commentary:
