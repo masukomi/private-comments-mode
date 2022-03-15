@@ -1,9 +1,9 @@
 ;;; private-comments-mode.el --- minor mode for masukomi/private_comments  -*- lexical-binding: t; coding: utf-8 -*-
 
-;; Copyright (C) 2022 The Authors
+;; Copyright (C) 2022 Kay Rhodes
 
 ;; Authors: Richard Chiang <richard@commandlinesystems.com>
-;;                masukomi <masukomi@masukomi.org>
+;;              Kay Rhodes <masukomi@masukomi.org>
 ;; Version: 0.1
 ;; Keywords: tools
 ;; URL: https://github.com/commercial-emacs/private-comments-mode
@@ -75,7 +75,7 @@
   :group 'private-comments
   :type 'string)
 
-(defcustom private-comments-executable "private_comments"
+(defcustom private-comments-executable (executable-find "private_comments")
   "Private Comments server executable."
   :group 'private-comments
   :type 'string
@@ -324,13 +324,21 @@ or abort with \\[private-comments-edit-abort]")))
   "Like `org-edit-special'."
   (interactive)
   (let ((restore-window-config (current-window-configuration))
+        (ov (car (cl-remove-if-not
+                  (lambda (ov)
+                    (overlay-get ov 'pcm-commit))
+                  (overlays-at (point)))))
         (buffer (switch-to-buffer-other-window (generate-new-buffer "PCM Edit"))))
     (with-current-buffer buffer
       (add-hook 'kill-buffer-hook
                 (apply-partially #'set-window-configuration restore-window-config)
                 nil t)
+      (setq-local private-comments--edit-callback-1 callback)
       (private-comments-edit-mode)
-      (setq-local private-comments--edit-callback-1 callback))))
+      (when ov
+        (save-excursion
+          (insert (string-trim-right (substring-no-properties
+                                      (overlay-get ov 'before-string)))))))))
 
 (defun private-comments-blame-data (base-name)
   (with-temp-buffer
