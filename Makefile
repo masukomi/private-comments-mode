@@ -39,7 +39,7 @@ $(CASK_DIR): Cask
 .PHONY: clean
 clean:
 	$(CASK) clean-elc
-	rm -f tests/log/*
+	rm -rf tests/config
 
 .PHONY: test-compile
 test-compile: autoloads

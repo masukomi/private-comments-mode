@@ -1,11 +1,21 @@
 ;;; private-comments-mode-test.el --- Test utilities for private-comments-mode  -*- lexical-binding: t; coding: utf-8 -*-
 
+(require 'private-comments-mode)
+
 (custom-set-variables
  '(auto-revert-verbose nil)
  '(auto-revert-stop-on-user-input nil)
- '(network-security-level (quote low)))
+ '(network-security-level (quote low))
+ '(private-comments-url "2702"))
 
-(require 'private-comments-mode)
+(setenv "PRIVATE_COMMENTS_DIR"
+        (concat
+         (file-name-as-directory
+          (expand-file-name "tests" (vc-git-root default-directory)))
+         "config/private_comments"))
+
+(setenv "PRIVATE_COMMENTS_PORT"
+        (number-to-string (url-port (url-generic-parse-url private-comments-url))))
 
 (defun pcm-test-wait-for (predicate &optional predargs ms interval continue)
   "Wait until PREDICATE function returns non-`nil'.

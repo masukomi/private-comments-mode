@@ -57,7 +57,13 @@
 "
   :lighter " PCM"
   (if private-comments-mode
-      (private-comments-apply)
+      (condition-case err
+          (private-comments-apply)
+        (error (display-warning
+                'private-comments
+                (format "private-comments-apply: %s"
+                        (error-message-string err)))
+               (private-comments-clear)))
     (private-comments-clear)))
 
 (defface private-comments-face
