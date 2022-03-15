@@ -5,7 +5,6 @@
 (files "private-comments*.el")
 
 (development
- (depends-on "ecukes")
  (depends-on "pkg-info")
  (depends-on "package-lint")
  (depends-on "ert-runner"))
