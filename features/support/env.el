@@ -2,8 +2,12 @@
 (custom-set-variables
  )
 
+(require 'ecukes)
+(require 'espuds)
+(require 'vc-git)
+
 (add-to-list 'load-path (expand-file-name "lisp" (vc-git-root default-directory)))
-(add-to-list 'load-path (expand-file-name "test" (vc-git-root default-directory)))
+(add-to-list 'load-path (expand-file-name "tests" (vc-git-root default-directory)))
 
 (require 'private-comments-mode-test)
 

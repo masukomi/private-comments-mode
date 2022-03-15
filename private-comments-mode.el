@@ -1,4 +1,4 @@
-;;; private-comments-mode.el --- minor mode for masukomi/private_comments  -*- lexical-binding: t; coding: utf-8 -*-
+;;; private-comments-mode.el --- Minor mode for masukomi/private_comments  -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2022 Kay Rhodes
 
@@ -7,7 +7,7 @@
 ;; Version: 0.1
 ;; Keywords: tools
 ;; URL: https://github.com/commercial-emacs/private-comments-mode
-;; Package-Requires: ((emacs "26.1"))
+;; Package-Requires: ((emacs "27.1"))
 
 ;;; Commentary:
 

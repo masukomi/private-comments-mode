@@ -6,6 +6,7 @@ dist
 todo.org
 mimeapps.list
 *autoloads.el
+*.elc
 super-secret-refresh-token
 \#*
 .\#*

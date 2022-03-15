@@ -51,6 +51,10 @@ lint: test-compile
 test-unit:
 	$(CASK) exec ert-runner -L . -L tests tests/test*.el
 
+.PHONY: test-int
+test-int:
+	$(CASK) exec ecukes --reporter magnars
+
 .PHONY: test
 test: test-compile test-unit test-int
 
