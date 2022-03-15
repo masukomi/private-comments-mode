@@ -7,7 +7,7 @@
 ;; Version: 0.1
 ;; Keywords: tools
 ;; URL: https://github.com/commercial-emacs/private-comments-mode
-;; Package-Requires: ((emacs "26.1") (anaphora "1.0.4"))
+;; Package-Requires: ((emacs "26.1"))
 
 ;;; Commentary:
 
@@ -20,11 +20,9 @@
 
 (defvar url-http-end-of-headers)
 
-;;;###autoload
 (defgroup private-comments nil
   "Minor mode for Private Comments."
-  :group 'tools
-  :prefix "private-comments-")
+  :group 'tools)
 
 (defvar private-comments-mode-map
   (let ((map (make-sparse-keymap)))
@@ -75,10 +73,11 @@
   :group 'private-comments
   :type 'string)
 
-(defcustom private-comments-executable (executable-find "private_comments")
+(defcustom private-comments-executable "private_comments"
   "Private Comments server executable."
   :group 'private-comments
   :type 'string
+  :initialize 'custom-initialize-changed
   :set (lambda (symbol value)
          (set-default symbol value)
          (unless (executable-find value)
@@ -320,6 +319,7 @@ or abort with \\[private-comments-edit-abort]")))
           buffer*)
          nil t)))))
 
+(defvar-local private-comments--edit-callback-1 nil)
 (defun private-comments-edit (callback)
   "Like `org-edit-special'."
   (interactive)
