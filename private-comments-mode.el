@@ -187,7 +187,7 @@ numerical port, e.g., 5749, which assumes
 
 (defun private-comments--mod-callback (ov is-after-change &rest _)
   (when is-after-change
-    (unless (equal (overlay-get ov 'pcm-line-string)
+    (unless (equal (overlay-get ov 'pcm-unformatted)
                    (save-excursion
                      (goto-char (overlay-start ov))
                      (thing-at-point 'line t))))))
@@ -260,6 +260,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                              (ov (make-overlay (point) (point-at-eol))))
                         (progn
                           (overlay-put ov 'pcm-commit treeish)
+                          (overlay-put ov 'pcm-unformatted (plist-get comment :comment))
                           (overlay-put ov 'before-string propertized)
                           (overlay-put ov 'modification-hooks
                                        (list 'private-comments--mod-callback)))
@@ -351,8 +352,7 @@ or abort with \\[private-comments-edit-abort]")))
       (private-comments-edit-mode)
       (when ov
         (save-excursion
-          (insert (string-trim-right (substring-no-properties
-                                      (overlay-get ov 'before-string)))))))))
+          (insert (overlay-get ov 'pcm-unformatted)))))))
 
 (defun private-comments-blame-data (base-name)
   (with-temp-buffer
