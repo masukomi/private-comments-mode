@@ -107,7 +107,13 @@ jobs:
       if: steps.cache-local-bin.outputs.cache-hit != 'true'
       run: |
         cd private_comments/src
-        sh build.sh
+        csc -static -unit masutils -cJ masutils.scm
+        csc -static -unit masufiles -cJ masufiles.scm
+        csc -static -unit masurequests -cJ masurequests.scm
+        csc -static -unit comment-recording -cJ comment-recording.scm
+        csc -static -unit listicles -cJ listicles.scm
+        csc -link masutils -link masufiles -link pathname-expand -static private_comments.scm
+        csc -link masufiles -link masurequests -link masutils -link comment-recording -link listicles -static pc.scm
         mkdir -p $HOME/.local/bin
         cp pc private_comments $HOME/.local/bin
 
