@@ -28,6 +28,7 @@ README.rst: README.in.rst private-comments-mode.el
 	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
 	    | sed -e 's/^\s*;;*\s*//g' \
 	    | scripts/readme-sed.sh "COMMENTARY" README.rst0 > README.rst
+	rm README.rst0
 
 .PHONY: cask
 cask: $(CASK_DIR)
