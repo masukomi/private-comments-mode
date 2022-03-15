@@ -194,10 +194,13 @@ BUFFER is the edit buffer from which url-retrieve was issued."
   (unwind-protect
       (progn
         (goto-char (1+ url-http-end-of-headers))
-        (let* ((result (json-parse-buffer :object-type 'plist
-                                          :array-type 'list
-                                          :null-object json-null
-                                          :false-object json-false))
+        (let* ((result (condition-case err
+                           (json-parse-buffer :object-type 'plist
+                                              :array-type 'list
+                                              :null-object json-null
+                                              :false-object json-false)
+                         (json-parse-error
+                          `(:status ERROR :description ,(error-message-string err)))))
                (status (plist-get result :status))
                (description (plist-get result :description)))
           (if (equal status "SUCCESS")
@@ -306,17 +309,18 @@ or abort with \\[private-comments-edit-abort]")))
              (base-name (file-name-nondirectory (buffer-file-name)))
              (relative-name (private-comments-relative-name base-name))
              (url-request-method "POST")
-             (url-request-data
-              (json-encode-alist
-               `((project_name_hash . ,(secure-hash
-                                        'sha256
-                                        (file-name-nondirectory
-                                         (directory-file-name
-                                          (vc-git-root default-directory)))))
-                 (file_path_hash . ,(secure-hash 'sha256 relative-name))
-                 (treeish . ,commit*)
-                 (line_number . ,line-number*)
-                 (comment . ,comment))))
+             (json (json-encode-alist
+                    `((project_name_hash . ,(secure-hash
+                                             'sha256
+                                             (file-name-nondirectory
+                                              (directory-file-name
+                                               (vc-git-root default-directory)))))
+                      (file_path_hash . ,(secure-hash 'sha256 relative-name))
+                      (treeish . ,commit*)
+                      (line_number . ,line-number*)
+                      (comment . ,(replace-regexp-in-string (regexp-quote "=")
+                                                            "-" comment)))))
+             (url-request-data json)
              (query (format "%s/v1/comments"
                             (directory-file-name private-comments-url))))
         (url-retrieve

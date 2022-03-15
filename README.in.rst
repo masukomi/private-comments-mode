@@ -31,4 +31,10 @@ Keymap (C-h b)
 
 .. KEYS NOTEBOOK (see Makefile)
 
+Caveats
+=======
+Equal (``=``) characters are substituted with hyphen (``-``).
+Currently the `private_comments` server returns ``Internal Server 500`` even when ``pc``
+sends equal characters in the comment.
+
 .. _Cask: https://github.com/cask/cask.git
