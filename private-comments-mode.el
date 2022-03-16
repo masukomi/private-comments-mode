@@ -4,7 +4,7 @@
 
 ;; Authors: Richard Chiang <richard@commandlinesystems.com>
 ;;              Kay Rhodes <masukomi@masukomi.org>
-;; Version: 0.1
+;; Version: 0.1.1
 ;; Keywords: tools
 ;; URL: https://github.com/masukomi/private-comments-mode
 ;; Package-Requires: ((emacs "27.1"))
@@ -322,8 +322,7 @@ or abort with \\[private-comments-edit-abort]")))
                       (file_path_hash . ,(secure-hash 'sha256 relative-name))
                       (treeish . ,commit*)
                       (line_number . ,line-number*)
-                      (comment . ,(replace-regexp-in-string (regexp-quote "=")
-                                                            "-" comment)))))
+                      (comment . ,comment))))
              (url-request-data json)
              (query (format "%s/v1/comments"
                             (directory-file-name private-comments-url))))
