@@ -18,17 +18,17 @@ ELCTESTS = $(TESTSSRC:.el=.elc)
 autoloads: cask
 	$(EMACS) -Q --batch -f package-initialize --eval "(package-generate-autoloads \"private-comments-mode\" default-directory)"
 
-README.rst: README.in.rst private-comments-mode.el
+README.org: README.in.rst private-comments-mode.el
 	$(CASK) eval "(progn \
 	             (load \"private-comments-mode\") \
 	             (describe-minor-mode \"private-comments-mode\") \
 	             (with-current-buffer \"*Help*\" (princ (buffer-string))))" 2>/dev/null \
-	| scripts/readme-sed.sh "KEYS NOTEBOOK" README.in.rst "key.*binding" > README.rst0
+	| scripts/readme-sed.sh "KEYS NOTEBOOK" README.in.org "key.*binding" > README.org0
 	grep ';;' private-comments-mode.el \
-	    | awk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
-	    | sed -e 's/^\s*;;*\s*//g' \
-	    | scripts/readme-sed.sh "COMMENTARY" README.rst0 > README.rst
-	rm README.rst0
+	    | gawk '/;;;\s*Commentary/{within=1;next}/;;;\s*/{within=0}within' \
+	    | gsed -e 's/^\s*;;*\s*//g' \
+	    | scripts/readme-sed.sh "COMMENTARY" README.org0 > README.org
+	rm README.org0
 
 .PHONY: cask
 cask: $(CASK_DIR)

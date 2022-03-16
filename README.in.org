@@ -1,0 +1,41 @@
+#+TITLE: private-comments-mode
+#+BEGIN_EXPORT html
+<a href="ttps://github.com/masukomi/private-comments-mode/actions"><img
+  src="https://github.com/masukomi/private-comments-mode/workflows/CI/badge.svg?branch=dev"
+  alt="Build Status" /></a>
+#+END_EXPORT
+
+COMMENTARY
+
+* Install
+  :PROPERTIES:
+  :CUSTOM_ID: install
+  :END:
+#+begin_example
+git clone https://github.com/commercial-emacs/private-comments-mode.git
+make -C private-comments-mode install
+#+end_example
+
+* Usage
+  :PROPERTIES:
+  :CUSTOM_ID: usage
+  :END:
+#+begin_example
+M-x private-comments-mode
+#+end_example
+
+* Keymap (C-h b)
+  :PROPERTIES:
+  :CUSTOM_ID: keymap-c-h-b
+  :END:
+#+begin_example
+KEYS NOTEBOOK
+#+end_example
+
+* Caveats
+  :PROPERTIES:
+  :CUSTOM_ID: caveats
+  :END:
+Equal (===) characters are substituted with hyphens (=-=). The
+=private_comments= server returns =Internal Server 500= when sent equal
+characters, even from =pc=.
