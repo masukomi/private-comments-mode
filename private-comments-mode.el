@@ -73,9 +73,9 @@
 
 (defface private-comments-face
   `((((class color) (background light))
-     :background "honeydew1" ,@(when (>= emacs-major-version 27) '(:extend t)))
+     :background "honeydew1")
     (((class color) (background dark))
-     :background "#383838" ,@(when (>= emacs-major-version 27) '(:extend t))))
+     :background "#383838"))
   "Face for annotations."
   :group 'private-comments)
 
@@ -257,7 +257,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                                           "[\n\r\v]")
                                          (concat "\n"
                                                  (make-string indent ? ))))
-                                       "\n"))
+                                       (if ov* "" "\n")))
                              (propertized (propertize
                                            aligned
                                            'face '(private-comments-face
