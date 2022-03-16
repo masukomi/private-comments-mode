@@ -257,11 +257,19 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                                            aligned
                                            'face '(private-comments-face
                                                    default)))
-                             (ov (make-overlay (point) (point-at-eol))))
+                             (ov (make-overlay (point) (point-at-eol)))
+                             (char-before (max (point-min) (point)))
+                             (ov* (unless (eq (char-before) (point-min))
+                                    (make-overlay char-before (1+ char-before)))))
                         (progn
+                          (if ov*
+                              (progn
+                                (overlay-put ov* 'pcm-commit treeish)
+                                (overlay-put ov* 'after-string propertized))
+                            (overlay-put ov 'before-string propertized))
+                          (overlay-put ov 'pcm-char-before char-before)
                           (overlay-put ov 'pcm-commit treeish)
                           (overlay-put ov 'pcm-unformatted (plist-get comment :comment))
-                          (overlay-put ov 'before-string propertized)
                           (overlay-put ov 'modification-hooks
                                        (list 'private-comments--mod-callback)))
                       (display-warning 'private-comments
