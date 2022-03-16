@@ -242,7 +242,12 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                     (forward-line (1- (plist-get comment :line_number)))
                     (if-let ((treeish (plist-get comment :treeish))
                              (indent (current-indentation))
+                             (ov (make-overlay (point) (point-at-eol)))
+                             (char-before (max (point-min) (1- (point))))
+                             (ov* (unless (eq (char-before) (point-min))
+                                    (make-overlay char-before char-before)))
                              (aligned (concat
+                                       (if ov* "\n" "")
                                        (make-string indent ? )
                                        (string-trim
                                         (mapconcat
@@ -256,11 +261,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
                              (propertized (propertize
                                            aligned
                                            'face '(private-comments-face
-                                                   default)))
-                             (ov (make-overlay (point) (point-at-eol)))
-                             (char-before (max (point-min) (point)))
-                             (ov* (unless (eq (char-before) (point-min))
-                                    (make-overlay char-before (1+ char-before)))))
+                                                   default))))
                         (progn
                           (if ov*
                               (progn
