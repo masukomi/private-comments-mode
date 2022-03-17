@@ -128,7 +128,7 @@
       (pcm-test-wait-for
        (lambda ()
          (when-let ((ov (car (overlays-at (point)))))
-           (equal "-----\n"
+           (equal "=====\n"
                   (substring-no-properties
                    (overlay-get ov 'before-string)))))
        nil 1500))
