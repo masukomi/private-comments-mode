@@ -41,6 +41,7 @@
   "Private comments mode key map.")
 
 (defun private-comments-clear ()
+  "Remove PCM overlays."
   (interactive)
   (save-excursion
     (save-restriction
@@ -55,8 +56,7 @@
 (define-minor-mode private-comments-mode
   "Private Comments minor mode.
 
-\\{private-comments-mode-map}
-"
+\\{private-comments-mode-map}"
   :lighter " PCM"
   (unless (buffer-file-name)
     (display-warning 'private-comments "private-comments-mode: no buffer")
@@ -129,6 +129,7 @@ numerical port, e.g., 5749, which assumes
                (set-default symbol reattempt))))))
 
 (defun private-comments-ensure-server ()
+  "Ensure PC Server running."
   (interactive)
   (cl-flet ((ping (repeats)
               (cl-loop
@@ -150,21 +151,23 @@ numerical port, e.g., 5749, which assumes
       (if (y-or-n-p "PC Server not running. Run now? ")
           (private-comments--run-server)
         (let (debug-on-error)
-          (error "private-comments-ensure-server: quit"))))
+          (error "`private-comments-ensure-server': quit"))))
     (unless (ping 5)
-      (error "private-comments-ensure-server: could not start server"))))
+      (error "`private-comments-ensure-server': could not start server"))))
 
 (defconst private-comments-server-process-name "PCM Server")
 (defconst private-comments-server-buffer-name
   (format "*%s*" private-comments-server-process-name))
 
 (defun private-comments-kill-server ()
+  "Kill PC Server."
   (interactive)
   (when-let ((buffer (get-buffer private-comments-server-buffer-name))
              (proc (get-buffer-process buffer)))
     (delete-process proc)))
 
 (defun private-comments--run-server ()
+  "Run PC Server."
   (let* ((buf (with-current-buffer
                   (get-buffer-create private-comments-server-buffer-name)
                 (setq buffer-read-only t)
@@ -181,20 +184,13 @@ numerical port, e.g., 5749, which assumes
                (process-buffer proc)))
     proc))
 
-(defmacro private-comments--request (url callback)
-  (declare (indent defun))
-  `(url-retrieve ,url ,callback nil t))
-
-(defun private-comments--mod-callback (ov is-after-change &rest _)
-  (when is-after-change
-    (unless (equal (overlay-get ov 'pcm-unformatted)
-                   (save-excursion
-                     (goto-char (overlay-start ov))
-                     (thing-at-point 'line t))))))
+(defun private-comments--mod-callback (ov _after _beg _end &optional _len)
+  "Stub a callback should OV be modified."
+  (ignore ov))
 
 (defun private-comments--generic-callback (buffer &rest _args)
   "Current buffer is url-http's retrieval (starts with ' *http').
-BUFFER is the edit buffer from which url-retrieve was issued."
+BUFFER is the edit buffer from which `url-retrieve' was issued."
   (unwind-protect
       (progn
         (goto-char (1+ url-http-end-of-headers))
@@ -221,7 +217,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
 
 (defun private-comments--apply-callback (buffer &rest _args)
   "Current buffer is url-http's retrieval (starts with ' *http').
-BUFFER is the edit buffer from which url-retrieve was issued."
+BUFFER is the edit buffer from which `url-retrieve' was issued."
   (unwind-protect
       (progn
         (goto-char (1+ url-http-end-of-headers))
@@ -271,6 +267,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
     (kill-buffer)))
 
 (defun private-comments-relative-name (base-name)
+  "Divine relative path of BASE-NAME from git root."
   (with-temp-buffer
     (vc-git-command t 0 base-name "ls-files" "-z" "--full-name" "--")
     (buffer-substring-no-properties
@@ -285,8 +282,7 @@ BUFFER is the edit buffer from which url-retrieve was issued."
 (define-minor-mode private-comments-edit-mode
   "Poor man's org-src-mode minor mode.
 
-\\{private-comments-edit-mode-map}
-"
+\\{private-comments-edit-mode-map}"
   :lighter " PCM Edit"
   (setq-local header-line-format
               (substitute-command-keys
@@ -294,19 +290,27 @@ BUFFER is the edit buffer from which url-retrieve was issued."
 or abort with \\[private-comments-edit-abort]")))
 
 (defun private-comments-edit-abort ()
+  "Abort adding private comment."
   (interactive)
   (kill-buffer))
 
 (defun private-comments-edit-done ()
+  "Confirm adding private comment."
   (interactive)
   (when (bound-and-true-p private-comments--edit-callback-1)
     (funcall private-comments--edit-callback-1 (buffer-string)))
   (kill-buffer))
 
 (defun private-comments--edit-callback-4 (buffer* line-number* commit* comment)
+  "Internal callback for `private-comments-edit-done'.
+Starred variable names are fixed at the time of calling
+`private-comment-record'.  BUFFER* is the original source
+buffer (as opposed to the comment edit buffer).  LINE-NUMBER* is
+the target source line number.  COMMIT* is the commit hash of
+LINE-NUMBER*.  COMMENT is the just added comment."
   (private-comments-ensure-server)
   (if (not (buffer-live-p buffer*))
-      (error "private-comments--edit-callback-4: Buffer '%s' killed."
+      (error "`private-comments--edit-callback-4': Buffer '%s' killed"
              (buffer-name buffer*))
     (with-current-buffer buffer*
       (let* ((default-directory (directory-file-name
@@ -336,7 +340,8 @@ or abort with \\[private-comments-edit-abort]")))
 
 (defvar-local private-comments--edit-callback-1 nil)
 (defun private-comments-edit (callback)
-  "Like `org-edit-special'."
+  "Like `org-edit-special'.
+CALLBACK is called upon `private-comments-edit-done'."
   (interactive)
   (let ((restore-window-config (current-window-configuration))
         (ov (car (cl-remove-if-not
@@ -355,6 +360,8 @@ or abort with \\[private-comments-edit-abort]")))
           (insert (overlay-get ov 'pcm-unformatted)))))))
 
 (defun private-comments-blame-data (base-name)
+  "Git blame BASE-NAME.
+An uncommitted change cannot be privately commented."
   (with-temp-buffer
     (vc-git-command t 0 base-name "blame")
     (goto-char (point-max))
@@ -425,13 +432,15 @@ or abort with \\[private-comments-edit-abort]")))
         #'private-comments--generic-callback
         (current-buffer))
        nil t)
-    (error "No private comment found.")))
+    (error "No private comment found")))
 
 (defsubst private-comments--uncommitted (commit)
+  "Predicate whether COMMIT hash is committed."
   (or (not (stringp commit))
       (string-match-p "^0+$" commit)))
 
 (defun private-comments-record ()
+  "Record a private comment."
   (interactive)
   (let* ((default-directory (directory-file-name
                              (file-name-directory (buffer-file-name))))
@@ -443,7 +452,7 @@ or abort with \\[private-comments-edit-abort]")))
                   (aref blame-data line-number)))
          (commit (plist-get blame :commit)))
     (if (private-comments--uncommitted commit)
-        (error "Line %s is uncommitted." line-number)
+        (error "Line %s is uncommitted" line-number)
       (private-comments-edit
        (apply-partially #'private-comments--edit-callback-4
                         (current-buffer)
@@ -451,6 +460,7 @@ or abort with \\[private-comments-edit-abort]")))
                         commit)))))
 
 (defun private-comments-apply ()
+  "Apply overlays for extant private comments."
   (interactive)
   (private-comments-ensure-server)
   (let* ((default-directory (directory-file-name
