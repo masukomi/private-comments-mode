@@ -12,18 +12,34 @@ appear as overlays and are not part of the source.
   :PROPERTIES:
   :CUSTOM_ID: install
   :END:
-#+begin_example
+#+BEGIN_EXAMPLE
 git clone https://github.com/commercial-emacs/private-comments-mode.git
 make -C private-comments-mode install
-#+end_example
+#+END_EXAMPLE
 
 * Usage
   :PROPERTIES:
   :CUSTOM_ID: usage
   :END:
-#+begin_example
+Toggle private-comments-mode
+
+#+BEGIN_EXAMPLE
 M-x private-comments-mode
-#+end_example
+#+END_EXAMPLE
+
+Add or edit a comment
+#+BEGIN_EXAMPLE
+C-c C-r
+; or
+private-comments-record
+#+END_EXAMPLE
+
+Delete the 1st comment above the cursor
+#+BEGIN_EXAMPLE
+C-c C-d
+; or
+private-commentns-delete
+#+END_EXAMPLE
 
 * Keymap (C-h b)
   :PROPERTIES:
@@ -41,11 +57,3 @@ M-x private-comments-mode
    
    C-M-q		prog-indent-sexp
 #+end_example
-
-* Caveats
-  :PROPERTIES:
-  :CUSTOM_ID: caveats
-  :END:
-Equal (===) characters are substituted with hyphens (=-=). The
-=private_comments= server returns =Internal Server 500= when sent equal
-characters, even from =pc=.

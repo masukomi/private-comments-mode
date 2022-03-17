@@ -18,7 +18,7 @@ ELCTESTS = $(TESTSSRC:.el=.elc)
 autoloads: cask
 	$(EMACS) -Q --batch -f package-initialize --eval "(package-generate-autoloads \"private-comments-mode\" default-directory)"
 
-README.org: README.in.rst private-comments-mode.el
+README.org: README.in.org private-comments-mode.el
 	$(CASK) eval "(progn \
 	             (load \"private-comments-mode\") \
 	             (describe-minor-mode \"private-comments-mode\") \

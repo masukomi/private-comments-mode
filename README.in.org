@@ -47,11 +47,3 @@ private-commentns-delete
 #+begin_example
 KEYS NOTEBOOK
 #+end_example
-
-* Caveats
-  :PROPERTIES:
-  :CUSTOM_ID: caveats
-  :END:
-Equal (===) characters are substituted with hyphens (=-=). The
-=private_comments= server returns =Internal Server 500= when sent equal
-characters, even from =pc=.
