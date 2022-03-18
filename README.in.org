@@ -20,9 +20,16 @@ COMMENTARY
   :CUSTOM_ID: install
   :END:
 #+BEGIN_EXAMPLE
-git clone https://github.com/commercial-emacs/private-comments-mode.git
-make -C private-comments-mode install
+$ git clone https://github.com/commercial-emacs/private-comments-mode.git
+$ cd private-comments-mode
+$ make
+# in emacs
+M-x package-install-file
+# then give it the path to the private-comments-mode-<version>.tar file
+# in the dist directory
 #+END_EXAMPLE
+
+Melpa installation coming soon...
 
 * Usage
   :PROPERTIES:
