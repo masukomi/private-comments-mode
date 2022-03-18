@@ -5,6 +5,14 @@
   alt="Build Status" /></a>
 #+END_EXPORT
 
+private-comment-mode is an emacs plugin for [Private Comments](https://github.com/masukomi/private_comments#readme)
+allowing you to see and manipulate your private comments from within emacs.
+
+#+BEGIN_EXPORT html
+<img src="https://masukomi.github.io/private_comments/images/emacs_demo.gif"
+  title="animated gif showing demo of this plugin" />
+#+END_EXPORT
+
 COMMENTARY
 
 * Install
@@ -47,3 +55,17 @@ private-commentns-delete
 #+begin_example
 KEYS NOTEBOOK
 #+end_example
+
+* Troubleshooting
+
+=private-comments-apply: Failed=
+
+This error indicates that the file in question has not been committed to git.
+[The Private Comments system](https://github.com/masukomi/private_comments#readme) uses
+git commit treeishes to know which comments apply to which versions of a file. As such
+it can't work on files that haven't been committed.
+
+#+BEGIN_EXAMPLE
+Warning (private-comments): private-comments-apply: Failed
+(status 128) git --no-pager ls-files -z --full-name -- my_filename
+#+END_EXAMPLE
