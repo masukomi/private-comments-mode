@@ -5,7 +5,7 @@
   alt="Build Status" /></a>
 #+END_EXPORT
 
-private-comment-mode is an emacs plugin for [Private Comments](https://github.com/masukomi/private_comments#readme)
+private-comment-mode is an emacs plugin for [[https://github.com/masukomi/private_comments#readme][Private Comments]]
 allowing you to see and manipulate your private comments from within emacs.
 
 [[file:images/emacs_demo.gif]]
