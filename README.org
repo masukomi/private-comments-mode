@@ -8,10 +8,7 @@
 private-comment-mode is an emacs plugin for [Private Comments](https://github.com/masukomi/private_comments#readme)
 allowing you to see and manipulate your private comments from within emacs.
 
-#+BEGIN_EXPORT html
-<img src="https://masukomi.github.io/private_comments/images/emacs_demo.gif"
-  title="animated gif showing demo of this plugin" />
-#+END_EXPORT
+[[file:images/emacs_demo.gif]]
 
 A minor mode for ``masukomi/private_comments``.  Private comments
 appear as overlays and are not part of the source.
