@@ -80,7 +80,36 @@ jobs:
     - name: apt-get
       run: |
         sudo apt-get -yq update
-        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev git
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev
+
+    - name: chicken-bin
+      run: |
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install chicken-bin
+
+    - name: lint
+      run: |
+        make lint
+
+    - name: install-chicken-eggs
+      if: steps.cache-local-bin.outputs.cache-hit != 'true'
+      run: |
+        cd private_comments/src
+        sudo sh install_chicken_eggs.sh
+        sudo chicken-install pathname-expand
+
+    - name: build-private-comments
+      if: steps.cache-local-bin.outputs.cache-hit != 'true'
+      run: |
+        cd private_comments/src
+        csc -static -unit masutils -cJ masutils.scm
+        csc -static -unit masufiles -cJ masufiles.scm
+        csc -static -unit masurequests -cJ masurequests.scm
+        csc -static -unit comment-recording -cJ comment-recording.scm
+        csc -static -unit listicles -cJ listicles.scm
+        csc -link masutils -link masufiles -link pathname-expand -static private_comments.scm
+        csc -link masufiles -link masurequests -link masutils -link comment-recording -link listicles -static pc.scm
+        mkdir -p $HOME/.local/bin
+        cp pc private_comments $HOME/.local/bin
 
     - name: test
       run: |
