@@ -1,7 +1,8 @@
 ;;; private-comments-mode.el --- Minor mode for masukomi/private_comments  -*- lexical-binding: t; coding: utf-8 -*-
 
 ;; Copyright (C) 2022 Kay Rhodes
-
+;; SPDX-License-Identifier: MIT
+;;
 ;; Authors: Richard Chiang <richard@commandlinesystems.com>
 ;;              Kay Rhodes <masukomi@masukomi.org>
 ;; Version: 0.1.1
