@@ -9,6 +9,7 @@
 ;; Keywords: tools
 ;; URL: https://github.com/masukomi/private-comments-mode
 ;; Package-Requires: ((emacs "27.1"))
+;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
 
@@ -153,8 +154,7 @@ numerical port, e.g., 5749, which assumes
     (unless (ping 1)
       (if (y-or-n-p "PC Server not running. Run now? ")
           (private-comments--run-server)
-        (let (debug-on-error)
-          (error "`private-comments-ensure-server': quit"))))
+        (user-error "`private-comments-ensure-server': quit")))
     (unless (ping 5)
       (error "`private-comments-ensure-server': could not start server"))))
 
@@ -435,7 +435,7 @@ An uncommitted change cannot be privately commented."
         #'private-comments--generic-callback
         (current-buffer))
        nil t)
-    (error "No private comment found")))
+    (user-error "No private comment found")))
 
 (defsubst private-comments--uncommitted (commit)
   "Predicate whether COMMIT hash is committed."
@@ -455,7 +455,7 @@ An uncommitted change cannot be privately commented."
                   (aref blame-data line-number)))
          (commit (plist-get blame :commit)))
     (if (private-comments--uncommitted commit)
-        (error "Line %s is uncommitted" line-number)
+        (user-error "Line %s is uncommitted" line-number)
       (private-comments-edit
        (apply-partially #'private-comments--edit-callback-4
                         (current-buffer)
