@@ -9,7 +9,6 @@
 ;; Keywords: tools
 ;; URL: https://github.com/masukomi/private-comments-mode
 ;; Package-Requires: ((emacs "27.1"))
-;; SPDX-License-Identifier: MIT
 
 ;;; Commentary:
 
