@@ -20,9 +20,9 @@
 (when (getenv "CI")
   (with-temp-buffer
     (apply #'call-process "git" nil t
-           (split-string "--global user.email foo@example.com"))
+           (split-string "config --global user.email foo@example.com"))
     (apply #'call-process "git" nil t
-           (split-string "--global user.name his_fooness"))
+           (split-string "config --global user.name his_fooness"))
     (apply #'call-process "git" nil t
            (split-string "config --list"))
     (message "%s" (buffer-string))))
