@@ -17,6 +17,14 @@
 (setenv "PRIVATE_COMMENTS_PORT"
         (number-to-string (url-port (url-generic-parse-url private-comments-url))))
 
+(when (getenv "CI")
+  (with-temp-buffer
+    (apply #'call-process "git" nil nil
+           (split-string "--global user.email foo@example.com"))
+    (apply #'call-process "git" nil nil
+           (split-string "--global user.name his_fooness"))
+    (message "%s" (buffer-string))))
+
 (defun pcm-test-wait-for (predicate &optional predargs ms interval continue)
   "Wait until PREDICATE function returns non-`nil'.
   PREDARGS is argument list for the PREDICATE function.
