@@ -3,7 +3,6 @@
 (require 'log-edit)
 
 (ert-deftest pcm-equal-signs ()
-  (skip-unless (executable-find private-comments-executable))
   (let* ((repo (expand-file-name "tests/pcm-equal-signs"
                                  (vc-git-root default-directory)))
          (default-directory (progn
