@@ -19,10 +19,12 @@
 
 (when (getenv "CI")
   (with-temp-buffer
-    (apply #'call-process "git" nil nil
+    (apply #'call-process "git" nil t
            (split-string "--global user.email foo@example.com"))
-    (apply #'call-process "git" nil nil
+    (apply #'call-process "git" nil t
            (split-string "--global user.name his_fooness"))
+    (apply #'call-process "git" nil t
+           (split-string "config --list"))
     (message "%s" (buffer-string))))
 
 (defun pcm-test-wait-for (predicate &optional predargs ms interval continue)
