@@ -45,7 +45,7 @@ jobs:
       id: cache-local-bin
       with:
         path: $HOME/.local/bin
-        key: cache-local-bin-000
+        key: cache-local-bin-001
 
     - uses: actions/cache@v2
       id: cache-cask-executable
