@@ -18,14 +18,13 @@
         (number-to-string (url-port (url-generic-parse-url private-comments-url))))
 
 (when (getenv "CI")
-  (with-temp-buffer
-    (apply #'call-process "git" nil t nil
-           (split-string "config --global user.email foo@example.com"))
-    (apply #'call-process "git" nil t nil
-           (split-string "config --global user.name his_fooness"))
-    (apply #'call-process "git" nil t nil
-           (split-string "config --list"))
-    (message "%s" (buffer-string))))
+  (cl-assert
+   (zerop
+    (apply #'call-process "git" nil nil nil
+           (split-string "config --global user.email foo@example.com"))))
+  (cl-assert
+   (zerop (apply #'call-process "git" nil nil nil
+                 (split-string "config --global user.name his_fooness")))))
 
 (defun pcm-test-wait-for (predicate &optional predargs ms interval continue)
   "Wait until PREDICATE function returns non-`nil'.
