@@ -4,6 +4,7 @@
 
 (ert-deftest pcm-test-record ()
   (skip-unless (executable-find private-comments-executable))
+  (skip-unless (executable-find "git"))
   (let* ((repo (expand-file-name "tests/pcm-test-record"
                                  (vc-git-root default-directory)))
          (default-directory (progn
@@ -100,6 +101,7 @@
 
 (ert-deftest pcm-equal-signs ()
   (skip-unless (executable-find private-comments-executable))
+  (skip-unless (executable-find "git"))
   (let* ((repo (expand-file-name "tests/pcm-equal-signs"
                                  (vc-git-root default-directory)))
          (default-directory (progn

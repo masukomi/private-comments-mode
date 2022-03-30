@@ -80,7 +80,7 @@ jobs:
     - name: apt-get
       run: |
         sudo apt-get -yq update
-        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev
+        DEBIAN_FRONTEND=noninteractive sudo apt-get -yq install gnutls-bin sharutils gnupg2 dirmngr libreadline-dev libcurl4-openssl-dev git
 
     - name: chicken-bin
       run: |
