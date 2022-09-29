@@ -255,6 +255,7 @@ BUFFER is the edit buffer from which `url-retrieve' was issued."
                                            aligned
                                            'face '(private-comments-face
                                                    default)))
+			     ; this is the overlay on the text we're commenting on
                              (ov (make-overlay (point) (point-at-eol))))
                         (progn
                           (overlay-put ov 'pcm-commit treeish)
@@ -262,6 +263,7 @@ BUFFER is the edit buffer from which `url-retrieve' was issued."
                           (overlay-put ov 'before-string propertized)
                           (overlay-put ov 'modification-hooks
                                        (list 'private-comments--mod-callback)))
+
                       (display-warning 'private-comments
                                        (concat "private-comments--apply-callback: "
                                                "unexpected "
