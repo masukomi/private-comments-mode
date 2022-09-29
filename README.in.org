@@ -60,6 +60,26 @@ private-commentns-delete
 KEYS NOTEBOOK
 #+end_example
 
+* Customizing colors
+Colors are defined via the =private-comments-face=. To customize the look, just override its defaults to something that works for you.
+
+** Using Emacs' Easy Customize
+
+The easiest way to customize the look of your private comments is to add a comment, and then run =M-x list-faces-display=
+
+Search for =private-comments-face= and select it. Edit the foreground and background colors and click "Apply" to test out new colors. Once you've got something you like, click "Apply and Save" to save it for future sessions.
+
+** Manual Customization
+
+Choose your favorite foreground and background color combination and add it to your config as follows.
+
+#+begin_src elisp
+(with-eval-after-load "private-comments-mode"
+  (set-face-background 'private-comments-face "#527568")
+  (set-face-foreground 'private-comments-face "#FFFFFF"))
+#+end_src
+
+
 * Troubleshooting
 
 =private-comments-apply: Failed=
