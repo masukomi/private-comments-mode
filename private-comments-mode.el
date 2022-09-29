@@ -76,9 +76,9 @@
 
 (defface private-comments-face
   `((((class color) (background light))
-     :background "honeydew1" ,@(when (>= emacs-major-version 27) '(:extend t)))
+     :background "honeydew1" :foreground "#030303" ,@(when (>= emacs-major-version 27) '(:extend t)))
     (((class color) (background dark))
-     :background "#383838" ,@(when (>= emacs-major-version 27) '(:extend t))))
+     :background "#383838" :foreground "#FFFFFF" ,@(when (>= emacs-major-version 27) '(:extend t))))
   "Face for annotations."
   :group 'private-comments)
 
