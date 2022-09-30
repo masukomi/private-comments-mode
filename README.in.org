@@ -16,6 +16,13 @@ COMMENTARY
   :PROPERTIES:
   :CUSTOM_ID: install
   :END:
+
+** From Melpa
+=M-x package-install=
+
+Then choose =private-comments-mode=
+
+** From GitHub
 #+BEGIN_EXAMPLE
 $ git clone https://github.com/commercial-emacs/private-comments-mode.git
 $ cd private-comments-mode
@@ -26,7 +33,6 @@ M-x package-install-file
 # in the dist directory
 #+END_EXAMPLE
 
-Melpa installation coming soon...
 
 * Usage
   :PROPERTIES:

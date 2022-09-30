@@ -10,13 +10,22 @@ allowing you to see and manipulate your private comments from within emacs.
 
 [[file:images/emacs_demo.gif]]
 
-A minor mode for ``masukomi/private_comments``.  Private comments
-appear as overlays and are not part of the source.
+A minor mode for ``masukomi/private_comments``.
+https://github.com/masukomi/private_comments
+Private comments appear as overlays and are
+not part of the source.
 
 * Install
   :PROPERTIES:
   :CUSTOM_ID: install
   :END:
+
+** From Melpa
+=M-x package-install=
+
+Then choose =private-comments-mode=
+
+** From GitHub
 #+BEGIN_EXAMPLE
 $ git clone https://github.com/commercial-emacs/private-comments-mode.git
 $ cd private-comments-mode
@@ -27,7 +36,6 @@ M-x package-install-file
 # in the dist directory
 #+END_EXAMPLE
 
-Melpa installation coming soon...
 
 * Usage
   :PROPERTIES:
@@ -69,6 +77,26 @@ private-commentns-delete
    
    C-M-q		prog-indent-sexp
 #+end_example
+
+* Customizing colors
+Colors are defined via the =private-comments-face=. To customize the look, just override its defaults to something that works for you.
+
+** Using Emacs' Easy Customize
+
+The easiest way to customize the look of your private comments is to add a comment, and then run =M-x list-faces-display=
+
+Search for =private-comments-face= and select it. Edit the foreground and background colors and click "Apply" to test out new colors. Once you've got something you like, click "Apply and Save" to save it for future sessions.
+
+** Manual Customization
+
+Choose your favorite foreground and background color combination and add it to your config as follows.
+
+#+begin_src elisp
+(with-eval-after-load "private-comments-mode"
+  (set-face-background 'private-comments-face "#527568")
+  (set-face-foreground 'private-comments-face "#FFFFFF"))
+#+end_src
+
 
 * Troubleshooting
 
