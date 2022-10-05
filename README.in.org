@@ -24,7 +24,7 @@ Then choose =private-comments-mode=
 
 ** From GitHub
 #+BEGIN_EXAMPLE
-$ git clone https://github.com/commercial-emacs/private-comments-mode.git
+$ git clone https://github.com/masukomi/private-comments-mode.git
 $ cd private-comments-mode
 $ make
 # in emacs
