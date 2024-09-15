@@ -61,9 +61,13 @@
 
 \\{private-comments-mode-map}"
   :lighter " PCM"
-  (unless (buffer-file-name)
-    (display-warning 'private-comments "private-comments-mode: no buffer")
-    (setq private-comments-mode nil))
+  (unless (and (buffer-file-name) (vc-backend (buffer-file-name)))
+    (progn
+        (if (and (boundp 'private-comments-mode-display-warnings)
+                          private-comments-mode-display-warnings)
+            (display-warning 'private-comments "private-comments-mode: file is either unsaved or not in version control.")
+            )
+        (setq private-comments-mode nil)))
   (if private-comments-mode
       (condition-case-unless-debug err
           (private-comments-apply)
