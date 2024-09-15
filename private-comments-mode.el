@@ -61,7 +61,7 @@
 
 \\{private-comments-mode-map}"
   :lighter " PCM"
-  (unless (and (buffer-file-name) (vc-backend (buffer-file-name)))
+  (unless (private-comments-is-version-controlled-p)
     (progn
         (if (and (boundp 'private-comments-mode-display-warnings)
                           private-comments-mode-display-warnings)
@@ -277,7 +277,12 @@ BUFFER is the edit buffer from which `url-retrieve' was issued."
 (defun private-comments-relative-name (base-name)
   "Divine relative path of BASE-NAME from git root."
   (with-temp-buffer
-    (vc-git-command t 0 base-name "ls-files" "-z" "--full-name" "--")
+    ; setting ok status to 999 should make it stop
+    ; spitting out warnings when you're working on a file that's not
+    ; in a git repo. based on the code in
+    ; defun vc-do-command  in vc-dispatcher.el (in emacs)
+
+    (vc-git-command t 999 base-name "ls-files" "-z" "--full-name" "--")
     (buffer-substring-no-properties
      (point-min) (max (point-min) (1- (point-max))))))
 
@@ -450,54 +455,79 @@ An uncommitted change cannot be privately commented."
 (defun private-comments-record ()
   "Record a private comment."
   (interactive)
-  (let* ((default-directory (directory-file-name
-                             (file-name-directory (buffer-file-name))))
-         (base-name (file-name-nondirectory (buffer-file-name)))
-         (blame-data (private-comments-blame-data base-name))
-         ;; line-number and blame-data are one-indexed
-         (line-number (line-number-at-pos))
-         (blame (when (<= line-number (length blame-data))
-                  (aref blame-data line-number)))
-         (commit (plist-get blame :commit)))
-    (if (private-comments--uncommitted commit)
-        (user-error "Line %s is uncommitted" line-number)
-      (private-comments-edit
-       (apply-partially #'private-comments--edit-callback-4
-                        (current-buffer)
-                        line-number
-                        commit)))))
+  ; there's no point in continuing if the buffer's not saved & under version control
+  (if (private-comments-is-version-controlled-p)
+      (progn
+        (let* ((default-directory (directory-file-name
+                                    (file-name-directory (buffer-file-name))))
+                (base-name (file-name-nondirectory (buffer-file-name)))
+                (blame-data (private-comments-blame-data base-name))
+                ;; line-number and blame-data are one-indexed
+                (line-number (line-number-at-pos))
+                (blame (when (<= line-number (length blame-data))
+                        (aref blame-data line-number)))
+                (commit (plist-get blame :commit)))
+            (if (private-comments--uncommitted commit)
+                (user-error "Line %s is uncommitted" line-number)
+            (private-comments-edit
+            (apply-partially #'private-comments--edit-callback-4
+                                (current-buffer)
+                                line-number
+                                commit))))
+        )
+        (display-warning 'private-comments "Can't comment until file is under version control")
+      )
+
+  )
 
 (defun private-comments-apply ()
   "Apply overlays for extant private comments."
   (interactive)
-  (private-comments-ensure-server)
-  (let* ((default-directory (directory-file-name
-                             (file-name-directory (buffer-file-name))))
-         (base-name (file-name-nondirectory (buffer-file-name)))
-         (relative-name (private-comments-relative-name base-name))
-         (blame-data (private-comments-blame-data base-name))
-         (blame-commits
-          (cl-delete-duplicates
-           (cl-remove-if
-            #'private-comments--uncommitted
-            (seq-map (lambda (x) (plist-get x :commit)) blame-data))
-           :test #'equal))
-         (query (format "%s/v1/comments?%s"
-                        (directory-file-name private-comments-url)
-                        (url-build-query-string
-                         `((project_name_hash ,(secure-hash
-                                                'sha256
-                                                (file-name-nondirectory
-                                                 (directory-file-name
-                                                  (vc-git-root default-directory)))))
-                           (file_path_hash ,(secure-hash 'sha256 relative-name))
-                           (treeishes ,(mapconcat #'identity blame-commits ",")))))))
-    (url-retrieve
-     query
-     (apply-partially
-      #'private-comments--apply-callback
-      (current-buffer))
-     nil t)))
+  (if (private-comments-is-version-controlled-p)
+      ; does nothing unless version controlled
+      (progn
+        (private-comments-ensure-server)
+        (let* ((default-directory (directory-file-name
+                                    (file-name-directory (buffer-file-name))))
+                (base-name (file-name-nondirectory (buffer-file-name))))
+                (if base-name
+                    (let* (
+
+                        (relative-name (private-comments-relative-name base-name))
+                        (blame-data (private-comments-blame-data base-name))
+                        (blame-commits
+                        (cl-delete-duplicates
+                        (cl-remove-if
+                            #'private-comments--uncommitted
+                            (seq-map (lambda (x) (plist-get x :commit)) blame-data))
+                        :test #'equal))
+                        (query (format "%s/v1/comments?%s"
+                                        (directory-file-name private-comments-url)
+                                        (url-build-query-string
+                                        `((project_name_hash ,(secure-hash
+                                                                'sha256
+                                                                (file-name-nondirectory
+                                                                (directory-file-name
+                                                                (vc-git-root default-directory)))))
+                                        (file_path_hash ,(secure-hash 'sha256 relative-name))
+                                        (treeishes ,(mapconcat #'identity blame-commits ",")))))))
+
+                        (url-retrieve
+                            query
+                            (apply-partially
+                            #'private-comments--apply-callback
+                            (current-buffer))
+                            nil t)))))))
+
+(defun private-comments-is-version-controlled-p ()
+  "Returns t or nil indicating if the file is version controlled"
+  ; "unknown" comes from vc-git-state when there was an error calling git
+  ; or the query to git returned nil which is assumed to mean the file is "likely"
+  ; not in a git repo.
+  ;
+  ; see vc-git-state (file) in vc-git.el for details
+  ; https://github.com/emacs-mirror/emacs/blob/4c567892e044ada0e09889ec520fefa07f52b20b/lisp/vc/vc-git.el#L386
+  (not (string= (vc-git-state buffer-file-name) "unknown" )))
 
 (provide 'private-comments-mode)
 
