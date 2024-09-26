@@ -15,3 +15,4 @@ ert-profile*
 melpazoid-master
 tests/*
 *~undo-tree~
+.fdignore
