@@ -5,7 +5,7 @@
 ;;
 ;; Authors: Richard Chiang <richard@commandlinesystems.com>
 ;;              Kay Rhodes <masukomi@masukomi.org>
-;; Version: 0.1.1
+;; Version: 0.1.2
 ;; Keywords: tools
 ;; URL: https://github.com/masukomi/private-comments-mode
 ;; Package-Requires: ((emacs "27.1"))
@@ -260,7 +260,7 @@ BUFFER is the edit buffer from which `url-retrieve' was issued."
                                            'face '(private-comments-face
                                                    default)))
 			     ; this is the overlay on the text we're commenting on
-                             (ov (make-overlay (point) (point-at-eol))))
+                             (ov (make-overlay (point) (line-end-position))))
                         (progn
                           (overlay-put ov 'pcm-commit treeish)
                           (overlay-put ov 'pcm-unformatted (plist-get comment :comment))
