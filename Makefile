@@ -6,6 +6,8 @@ endif
 CASK_DIR := $(shell $(CASK) package-directory || exit 1)
 SRC = $(shell $(CASK) files)
 UNLINTABLE=private-comments-mode-autoloads.el private-comments-pkg.el
+
+# pulls the version from private-comments-mode.el
 VERSION = $(shell $(CASK) version)
 ELCFILES = $(SRC:.el=.elc)
 TESTS = $(shell git ls-files tests/test*el)
@@ -44,10 +46,10 @@ clean:
 
 .PHONY: test-compile
 test-compile: autoloads
-	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
+	! ($(CASK) eval "(let ((byte-compile-error-on-warn t)) (cask-cli/build))" 2>&1 | ggrep -E -a "(Warning|Error):") ; (ret=$$? ; $(CASK) clean-elc && exit $$ret)
 	! ($(CASK) eval \
 	      "(cl-letf (((symbol-function (quote cask-files)) (lambda (&rest _args) (mapcar (function symbol-name) (quote ($(TESTSSRC))))))) \
-	          (let ((byte-compile-error-on-warn t)) (cask-cli/build)))" 2>&1 | egrep -a "(Warning|Error):") ; (ret=$$? ; rm -f $(ELCTESTS) && exit $$ret)
+	          (let ((byte-compile-error-on-warn t)) (cask-cli/build)))" 2>&1 | ggrep -E -a "(Warning|Error):") ; (ret=$$? ; rm -f $(ELCTESTS) && exit $$ret)
 
 .PHONY: lint
 lint: cask

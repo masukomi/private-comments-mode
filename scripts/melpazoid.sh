@@ -13,7 +13,7 @@ ROOT=$(git rev-parse --show-toplevel)
 cd ${ROOT}
 PKG_PATH="${ROOT}/melpazoid-master/$(basename $(pwd))"
 PKG_NAME=$(basename "$PKG_PATH")
-PKG_MAIN=$(cask files | egrep -- "pkg.el$" || true)
+PKG_MAIN=$(cask files | ggrep -E -- "pkg.el$" || true)
 PKG_MAIN=$(basename ${PKG_MAIN:-${PKG_NAME}.el})
 rm -rf ${PKG_PATH}
 mkdir -p ${PKG_PATH}
