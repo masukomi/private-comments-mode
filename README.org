@@ -66,16 +66,6 @@ private-commentns-delete
   :CUSTOM_ID: keymap-c-h-b
   :END:
 #+begin_example
-   key             binding
-   ---             -------
-   
-   C-c		Prefix Command
-   ESC		Prefix Command
-   
-   C-c C-d		private-comments-delete
-   C-c C-r		private-comments-record
-   
-   C-M-q		prog-indent-sexp
 #+end_example
 
 * Customizing colors
@@ -111,3 +101,15 @@ it can't work on files that haven't been committed.
 Warning (private-comments): private-comments-apply: Failed
 (status 128) git --no-pager ls-files -z --full-name -- my_filename
 #+END_EXAMPLE
+
+* Developing
+
+1. hackety hack
+2. launch [[https://github.com/masukomi/private_comments][private comments server]]
+3. run =make test=
+4. bump version number according to [[https://semver.org/][Semantic Versioning]] guidelines
+5. run =make install= to install it locally.
+   Or use any of the many other ways of installing a local package.
+6. ??? to update the =README.org= file
+   README.in.org acts as a template with info added from the actual code.
+7. run =make dist= to generate new =.tar= file in the =./dist= directory

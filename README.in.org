@@ -99,3 +99,15 @@ it can't work on files that haven't been committed.
 Warning (private-comments): private-comments-apply: Failed
 (status 128) git --no-pager ls-files -z --full-name -- my_filename
 #+END_EXAMPLE
+
+* Developing
+
+1. hackety hack
+2. launch [[https://github.com/masukomi/private_comments][private comments server]]
+3. run =make test=
+4. bump version number according to [[https://semver.org/][Semantic Versioning]] guidelines
+5. run =make install= to install it locally.
+   Or use any of the many other ways of installing a local package.
+6. run =make README.org= to update the =README.org= file
+   The =README.in.org= acts as a template with info added from the actual code to produce =README.org=.
+7. run =make dist= to generate new =.tar= file in the =./dist= directory
