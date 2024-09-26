@@ -1,0 +1,11 @@
+#+title: private-comments-mode Changelog
+
+
+* v0.1.2 - Less Whinging
+** Changed
+- No longer gives a warning when you create / open a file that isn't being tracked by git.
+** Added
+- =private-comments-is-version-controlled-p= function for testing if a file is version controlled.
+
+* v0.1.1
+Initial release
